@@ -5,14 +5,18 @@
     <NavBar class="home-nav">
       <div slot="center">购物街</div>
     </NavBar>
+    <TabControl ref="tabControl1" class="home-tab-control"
+                :title="['流行','经典','精选']" @tabClick="tabClick" v-show="tabIsShow"
+    />
     <ScrollBetter class="content"
                   ref="scrollBetter"
                   :probeType="3" :pullUpLoad="true"
                   @scrollChange="scrollChange" @scrollLoad="scrollLoad">
-    <HomeSwiper :banners="banners"></HomeSwiper>
+    <HomeSwiper :banners="banners" @imageLoad="imageLoad"></HomeSwiper>
     <RecommendView :recommends="recommends"/>
     <FatureView/>
-    <TabControl class="home-tab-control" :title="['流行','经典','精选']" @tabClick="tabClick"/>
+    <TabControl ref="tabControl2" class="home-tab-control"
+                :title="['流行','经典','精选']" @tabClick="tabClick"/>
     <GoodList :goods="getInfo"/>
     </ScrollBetter>
     <BackTop @click.native="backClick" v-show="isShow"/>
@@ -23,12 +27,15 @@
   import NavBar from 'components/comon/navbar/NavBar'
   import ScrollBetter from 'components/comon/scroll/ScrollBetter'
   import BackTop from 'components/content/backTop/BackTop'
+  import {debounce}   from 'components/comon/utils/utils'
   import HomeSwiper from 'views/home/homeChildren/HomeSwiper'
   import FatureView from 'views/home/homeChildren/FatureView'
   import {getHomeMultidata,getHomeGoods} from 'network/home/HomeAjax'
   import RecommendView from 'views/home/homeChildren/RecommendView'
   import TabControl from 'components/content/tabControl/TabControl'
   import GoodList from 'components/content/goods/GoodList'
+
+  import {itemListenerMixin} from '../../common/mixin'
     export default {
         name: "Home",
       data(){
@@ -68,9 +75,14 @@
                   {title:'single019',show:{img:'https://cdn.jsdelivr.net/gh/hhgal/mycdn/pic2/F9FA28E3.jpg'}}
                 ]}
             },
-            goodType:'pop'
+            goodType:'pop',
+            offsetTop:0,
+            tabIsShow:false,
+            saveY:0,
+
           }
       },
+      mixins:[itemListenerMixin],
       components:{
         NavBar,
         HomeSwiper,
@@ -84,7 +96,7 @@
       computed:{
           getInfo(){
             return this.goods[this.goodType].list;
-          }
+          },
       },
       methods:{
         getHomeMultidata(){
@@ -116,6 +128,8 @@
 
           }
           console.log(this.goodType)
+          this.$refs.tabControl1.currentIndex=index;
+          this.$refs.tabControl2.currentIndex=index;
         },
         backClick(){
 
@@ -123,22 +137,41 @@
         },
         scrollChange(position){
 
-            this.isShow=(-position.y)>500
+            this.isShow=(-position.y)>500;
+            this.tabIsShow=(-position.y)>this.offsetTop;
         },
         scrollLoad(){
-          console.log('拉扯到你最爱');
+          //console.log('拉扯到你最爱');
           //this.getHomeGoods(this.goodType);
           this.goods[this.goodType].page+=1;
           let array=this.goods[this.goodType].list;
           this.goods[this.goodType].list=array.concat(array);
           this.$refs.scrollBetter.scrollFinish();
-          this.$refs.scrollBetter.scroll.refresh();
+
+        },
+        imageLoad(){
+         //console.log(this.$refs.tabControl.$el.offsetTop,'offsetTop')
+         // console.log('offsetTop')
+          this.offsetTop=this.$refs.tabControl2.$el.offsetTop;
         }
       },
       created() {
        this.getHomeMultidata();
        this.getHomeGoods('pop');
-      }
+      },
+      mounted() {
+
+      },
+      activated(){
+          console.log('activated');
+          this.$refs.scrollBetter.toTop(0,this.saveY,0);
+        //this.$refs.scrollBetter.scrollRefresh();
+      },
+      deactivated(){
+        this.saveY=this.$refs.scrollBetter.getScrollY();
+        this.$bus.$off('picLoad',this.picLoadListener);
+        console.log(this.saveY,'this.saveY');
+      },
     }
 </script>
 

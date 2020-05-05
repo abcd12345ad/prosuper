@@ -1,7 +1,8 @@
 <template>
 
-  <div class="goodListItem">
-    <img :src="good.show.img"/>
+  <div class="goodListItem" @click="itemClick">
+   <!-- <img :src="showImage" @load="imgLoad"/>-->
+    <img v-lazy="showImage" @load="imgLoad"/>
     <div class="goods-info">
       <p class="collect">{{good.title}}</p>
     </div>
@@ -16,7 +17,25 @@
           good:{
             type:Object,
             default:{}
+          },
+        goodKey:{
+            type:Number,
+          default:0
+        }
+      },
+      computed:{
+          showImage(){
+            return this.good.show.image||this.good.show.img
           }
+      },
+      methods:{
+        imgLoad(){
+
+          this.$bus.$emit('picLoad');
+        },
+        itemClick(){
+          this.$router.push('/detail/'+'CD528D2A--'+this.goodKey);
+        }
       }
     }
 </script>

@@ -30,14 +30,22 @@
       methods:{
         toTop(x,y,time=1000){
 
-          this.scroll.scrollTo(x,y,time);
+          this.scroll&&this.scroll.scrollTo&&this.scroll.scrollTo(x,y,time);
         },
         scrollFinish(){
-          this.scroll.finishPullUp();
+          this.scroll&&this.scroll.finishPullUp&&this.scroll.finishPullUp();
+        },
+        scrollRefresh(){
+
+          this.scroll&&this.scroll.refresh&&this.scroll.refresh();
+        },
+        getScrollY(){
+          return this.scroll?this.scroll.y:0
         }
       },
       mounted(){
         this.scroll=  new BScroll (this.$refs.wrapper,{
+          click:true,
           probeType:this.probeType,
           pullUpLoad:this.pullUpLoad
         });
